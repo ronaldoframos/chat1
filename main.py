@@ -7,21 +7,25 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
 #%%
-
+#
+# ler o dot-env
 load_dotenv()
+#%%
 
-# app config
-st.set_page_config(page_title="Streamlit Chatbot", page_icon="🤖")
-st.title("Chatbot")
+
+#%%
 
 def get_response(user_query, chat_history):
 
     template = """
-    You are a helpful assistant. Answer the following questions considering the history of the conversation:
+    Você é um assistente pessoal sobre a prefeitura de fortaleza, ceará. Responda as 
+    questões que seguem baseado na história da conversa:
 
-    Chat history: {chat_history}
+    história da conversa: {chat_history}
 
-    User question: {user_question}
+    Pergunta do usuário: {user_question}.
+
+    
     """
 
     prompt = ChatPromptTemplate.from_template(template)
@@ -30,19 +34,66 @@ def get_response(user_query, chat_history):
         
     chain = prompt | llm | StrOutputParser()
     
-    return chain.invoke({
+    return chain.stream({
         "chat_history": chat_history,
         "user_question": user_query,
     })
 
+
+#
+# funções abaixo só podem ser testadas no streamlit
+#
+
+# app config
+st.set_page_config(page_title="TESTE DE CHATBOT NO STREAMLIT", page_icon="🤖", layout="wide")
+st.title("FORTALEZA-CE - Chatbot Da Peste")
+
+# Aplicar estilo CSS
+st.markdown(
+    """
+    <style>
+    body {
+        background-color: #00FF00;
+    }
+    .header {
+        background-color: #004400;
+        padding: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .header .icon {
+        font-size: 24px;
+        color: #FFFFFF;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# Cabeçalho com ícones
+st.markdown(
+    """
+    <div class="header">
+        <div class="icon">🚀</div>
+        <h1>
+        EMBRAPII - Bureau Tecnologia
+        </h1>
+        <div class="icon">🚀</div>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+
 # session state
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = [
-        AIMessage(content="Hello, I am a bot. How can I help you?"),
+        AIMessage(content="Olá. Em que posso ajudá-lo?"),
     ]
 
     
-# conversation
+# conversa
 for message in st.session_state.chat_history:
     if isinstance(message, AIMessage):
         with st.chat_message("AI"):
@@ -51,8 +102,8 @@ for message in st.session_state.chat_history:
         with st.chat_message("Human"):
             st.write(message.content)
 
-# user input
-user_query = st.chat_input("Type your message here...")
+# entrada do usuário
+user_query = st.chat_input("Digite a sua mensagem aqui...")
 if user_query is not None and user_query != "":
     st.session_state.chat_history.append(HumanMessage(content=user_query))
 
@@ -60,7 +111,7 @@ if user_query is not None and user_query != "":
         st.markdown(user_query)
 
     with st.chat_message("AI"):
-        response = get_response(user_query, st.session_state.chat_history)
-        st.write(response)
+        response = st.write_stream(get_response(user_query, st.session_state.chat_history))
 
     st.session_state.chat_history.append(AIMessage(content=response))
+
