@@ -15,7 +15,7 @@ load_dotenv()
 
 #%%
 
-def get_response(user_query, chat_history):
+def get_response(user_query, chat_history, modelo = 'llama'):
 
     template = """
     Você é um assistente pessoal sobre a prefeitura de fortaleza, ceará. Responda as 
@@ -30,7 +30,11 @@ def get_response(user_query, chat_history):
 
     prompt = ChatPromptTemplate.from_template(template)
 
-    llm = ChatOpenAI()
+    if modelo == 'openai':
+        llm = ChatOpenAI()
+    else:
+        llm = ChatOpenAI(base_url="http://localhost:1234/v1", api_key="lm-studio", 
+                   model="lmstudio-community/Meta-Llama-3-8B-Instruct-GGUF")
         
     chain = prompt | llm | StrOutputParser()
     
